@@ -6,10 +6,7 @@ import com.nhaarman.mockito_kotlin.verify
 import com.nhaarman.mockito_kotlin.whenever
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -70,8 +67,8 @@ class PreferenceDelegateTest {
         var stringSetValueNullable by prefs.stringSet(STRING_SET_NULLABLE)
         var enumValue: SomeEnum by prefs.enum(ENUM, SomeEnum.DEFAULT)
         var enumValueNullable: SomeEnum? by prefs.enum(ENUM_NULLABLE)
-        var jsonValue: Person by prefs.json(JSON, moshi, Person("a", 1))
-        var jsonValueNullable: Person? by prefs.json(JSON_NULLABLE, moshi)
+        var jsonValue: Person by prefs.json(JSON, PrefsDelegateJsonParser({ jsonAdapter.fromJson(it)!! }, jsonAdapter::toJson), Person("a", 1))
+        var jsonValueNullable: Person? by prefs.json(JSON_NULLABLE, PrefsDelegateJsonParser(jsonAdapter::fromJson, jsonAdapter::toJson))
     }
 
     @Mock lateinit var prefs: SharedPreferences

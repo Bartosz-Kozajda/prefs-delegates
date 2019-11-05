@@ -22,9 +22,15 @@ class MainViewModel @Inject constructor(private val testStore: TestStore) : View
         testStore.person = person
     }
 
+    fun savePersons(persons: List<Person>) {
+        testStore.persons = persons
+    }
+
     fun getEnum() = testStore.enum
 
     fun getPerson(): Person? = testStore.person
+
+    fun getPersons(): List<Person>? = testStore.persons
 
     fun observeTokenChange(): Observable<String> = testStore.token.observable()
 }

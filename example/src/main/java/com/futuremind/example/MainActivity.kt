@@ -30,7 +30,9 @@ class MainActivity : AppCompatActivity(), Injectable {
         viewModel.saveAge(26)
         viewModel.saveEnum(TestStore.SomeEnum.NICE)
         viewModel.savePerson(Person("Johny", 22))
+        viewModel.savePersons(listOf(Person("Johny", 22), Person("Adam", 33)))
         Log.d("test", viewModel.getEnum().toString())
         Log.d("test", viewModel.getPerson().toString())
+        Log.d("test", viewModel.getPersons().toString())
     }
 }
