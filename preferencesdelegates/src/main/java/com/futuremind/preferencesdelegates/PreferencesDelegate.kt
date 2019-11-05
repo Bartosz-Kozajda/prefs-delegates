@@ -1,7 +1,6 @@
 package com.futuremind.preferencesdelegates
 
 import android.content.SharedPreferences
-import com.squareup.moshi.Moshi
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -209,16 +208,20 @@ inline fun <reified T : Enum<*>?> SharedPreferences.enum(prefsKey: String, defau
                 { key, value -> putString(key, value.name) }
         )
 
+typealias PrefsDelegateJsonParser<T> = Pair<(json: String) -> T, (value: T) -> String>
 
 /**
  * Produces property delegate for any nullable type, which will be stored in given [SharedPreferences] object in JSON format.
  * When `null` is assigned, the property is removed.
  *
  * @param prefsKey the key property to be referred with in [SharedPreferences]
- * @param moshi the [Moshi] library object for JSON parsing
+ * @param jsonParser the pair of functions for JSON parsing
  * @return value of the preference or null if given key is not present
  */
-inline fun <reified T : Any?> SharedPreferences.json(prefsKey: String, moshi: Moshi) = json<T?>(prefsKey, moshi, null)
+inline fun <reified T : Any?> SharedPreferences.json(
+        prefsKey: String,
+        jsonParser: PrefsDelegateJsonParser<T?>
+): ReadWriteProperty<Any, T?> = json(prefsKey, jsonParser, null)
 
 /**
  * Produces property delegate for any non-/nullable type, which will be stored in given [SharedPreferences] object in JSON format.
@@ -228,26 +231,28 @@ inline fun <reified T : Any?> SharedPreferences.json(prefsKey: String, moshi: Mo
  * Otherwise delegate returns non nullable type implicit but field still can be declared as nullable type.
  *
  * @param prefsKey the key property to be referred with in [SharedPreferences]
- * @param moshi the [Moshi] library object for JSON parsing
+ * @param jsonParser the pair of functions for JSON parsing
  * @param defaultValue the value to be provided to property if key is not present in [SharedPreferences]
  * @return value of the preference or [defaultValue] if given key is not present
  */
-inline fun <reified T : Any?> SharedPreferences.json(prefsKey: String, moshi: Moshi, defaultValue: T): ReadWriteProperty<Any, T> {
-    val jsonAdapter = moshi.adapter(T::class.java)
+inline fun <reified T : Any?> SharedPreferences.json(
+        prefsKey: String,
+        jsonParser: PrefsDelegateJsonParser<T>,
+        defaultValue: T
+): ReadWriteProperty<Any, T> {
     return prefsDelegate<Any, T>(
             prefsKey,
             defaultValue,
             { key ->
                 try {
-                    jsonAdapter.fromJson(getString(key, null)!!)
+                    jsonParser.first(getString(key, null)!!)
                 } catch (e: Exception) {
                     null
                 }
             },
-            { key, value -> putString(key, jsonAdapter.toJson(value as T)) }
+            { key, value -> putString(key, jsonParser.second(value as T)) }
     )
 }
-
 
 @PublishedApi
 internal fun <NonNullableT : Any, T : NonNullableT?> SharedPreferences.prefsDelegate(
